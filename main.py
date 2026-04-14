@@ -25,7 +25,7 @@ for color in ["white", "black"]:
             pygame.image.load(path), (60, 60)
         )
 
-# --- HELPERS ---
+# --- DRAW BOARD ---
 def draw_board(screen, board):
     screen.fill("white")
     colors = ["white", "#D684FF"]
@@ -33,21 +33,28 @@ def draw_board(screen, board):
 
     for rank in range(8):
         for file in range(8):
-            draw_file = file
-            draw_rank = rank
 
-            if player_color == chess.BLACK:
-                draw_file = 7 - file
-                draw_rank = 7 - rank
+            if player_color == chess.WHITE:
+                display_file = file
+                display_rank = 7 - rank
+            else:
+                display_file = 7 - file
+                display_rank = rank
 
             pygame.draw.rect(
                 screen,
                 colors[(rank + file) % 2],
-                pygame.Rect(360 + draw_file * 60, 60 + draw_rank * 60, 60, 60),
+                pygame.Rect(
+                    360 + display_file * 60,
+                    60 + display_rank * 60,
+                    60,
+                    60,
+                ),
             )
 
-            square = chess.square(file, 7 - rank)
+            square = chess.square(file, rank)
             piece = board.piece_at(square)
+
             if piece:
                 abbrev = piece.symbol().upper()[0]
                 color = "w" if piece.color == chess.WHITE else "b"
@@ -59,7 +66,10 @@ def draw_board(screen, board):
                     screen.blit(
                         img,
                         pygame.Rect(
-                            360 + draw_file * 60, 60 + draw_rank * 60, 60, 60
+                            360 + display_file * 60,
+                            60 + display_rank * 60,
+                            60,
+                            60,
                         ),
                     )
 
@@ -68,6 +78,7 @@ def draw_board(screen, board):
         screen.blit(selected_img, (mx - 30, my - 30))
 
 
+# --- END SCREEN ---
 def draw_end_screen(screen, board):
     if board.is_checkmate():
         text = "You Won!" if board.turn != player_color else "You Lost!"
@@ -122,15 +133,21 @@ def get_square_under_mouse():
     file = (x - 360) // 60
     rank = (y - 60) // 60
 
-    if 0 <= file <= 7 and 0 <= rank <= 7:
-        if player_color == chess.BLACK:
-            file = 7 - file
-            rank = 7 - rank
-        return chess.square(file, 7 - rank)
-    return None
+    if not (0 <= file <= 7 and 0 <= rank <= 7):
+        return None
+
+    if player_color == chess.WHITE:
+        board_file = file
+        board_rank = 7 - rank
+    else:
+        board_file = 7 - file
+        board_rank = rank
+
+    return chess.square(board_file, board_rank)
 
 
-def create_move_with_promotion(board, from_square, to_square, promotion_piece=None):
+# --- PROMOTION ---
+def create_move_with_promotion(board, from_square, to_square):
     piece = board.piece_at(from_square)
     if piece and piece.piece_type == chess.PAWN:
         rank = chess.square_rank(to_square)
@@ -190,7 +207,7 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             square = get_square_under_mouse()
-            if square:
+            if square is not None:
                 if selected_square is None:
                     piece = board.piece_at(square)
                     if piece and piece.color == player_color:
