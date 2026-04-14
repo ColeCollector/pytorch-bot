@@ -7,13 +7,14 @@ class ChessNet(nn.Module):
     def __init__(self):
         super(ChessNet, self).__init__()
         
-        self.conv1 = nn.Conv2d(12, 64, kernel_size=3, stride=1, padding=1)  # 12 channels for the 12 possible pieces
+        # 12 channels for the 12 possible pieces
+        self.conv1 = nn.Conv2d(12, 64, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
         self.fc1 = nn.Linear(128 * 8 * 8, 1024)
         
         # Policy head (moves)
-        self.policy_fc = nn.Linear(1024, 4672)  # There are 4672 possible moves on a chessboard
+        self.policy_fc = nn.Linear(1024, 4672)
         # Value head (win/lose/draw)
         self.value_fc = nn.Linear(1024, 1)
         
@@ -21,7 +22,9 @@ class ChessNet(nn.Module):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
-        x = x.view(x.size(0), -1)  # Flatten the tensor
+        
+        # Flatten the tensor
+        x = x.view(x.size(0), -1) 
         
         x = F.relu(self.fc1(x))
         
